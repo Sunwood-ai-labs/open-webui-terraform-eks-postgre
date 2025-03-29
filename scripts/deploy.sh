@@ -4,6 +4,9 @@
 
 set -e
 
+# スクリプトが存在するディレクトリのパスを取得
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 # 色の設定
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -60,32 +63,36 @@ function check_prerequisites {
 # Terraformの初期化
 function terraform_init {
   echo -e "${YELLOW}Terraformを初期化しています...${NC}"
-  cd terraform
+  cd "${SCRIPT_DIR}/../terraform"
   terraform init
+  cd - > /dev/null
   echo -e "${GREEN}Terraformの初期化が完了しました。${NC}"
 }
 
 # Terraformのプラン
 function terraform_plan {
   echo -e "${YELLOW}Terraformプランを実行しています...${NC}"
-  cd terraform
+  cd "${SCRIPT_DIR}/../terraform"
   terraform plan -var-file=environments/dev/terraform.tfvars
+  cd - > /dev/null
   echo -e "${GREEN}Terraformプランが完了しました。${NC}"
 }
 
 # Terraformのapply
 function terraform_apply {
   echo -e "${YELLOW}Terraformを適用しています...${NC}"
-  cd terraform
+  cd "${SCRIPT_DIR}/../terraform"
   terraform apply -var-file=environments/dev/terraform.tfvars -auto-approve
+  cd - > /dev/null
   echo -e "${GREEN}Terraformの適用が完了しました。${NC}"
 }
 
 # Terraformの破棄
 function terraform_destroy {
   echo -e "${YELLOW}環境を破棄しています...${NC}"
-  cd terraform
+  cd "${SCRIPT_DIR}/../terraform"
   terraform destroy -var-file=environments/dev/terraform.tfvars -auto-approve
+  cd - > /dev/null
   echo -e "${GREEN}環境の破棄が完了しました。${NC}"
 }
 
@@ -108,12 +115,11 @@ function init_postgres {
   DB_ENDPOINT=$(cd terraform && terraform output -raw db_instance_endpoint)
   DB_NAME=$(cd terraform && terraform output -raw db_instance_name)
   
-  # パスワードの入力を求める
-  read -sp "PostgreSQLのパスワードを入力してください: " DB_PASSWORD
-  echo ""
+  # パスワードをterraform.tfvarsから取得
+  DB_PASSWORD=$(grep -E "^db_password.*=.*\".*\"" ${SCRIPT_DIR}/../terraform/environments/dev/terraform.tfvars | sed -E 's/^db_password.*=.*"(.*)".*/\1/')
   
   # 初期化スクリプトの実行
-  ./scripts/init_postgres.sh ${DB_ENDPOINT%:*} 5432 $DB_NAME openwebui $DB_PASSWORD
+  ./scripts/init_postgres.sh ${DB_ENDPOINT%:*} 5432 $DB_NAME openwebui "$DB_PASSWORD"
   
   echo -e "${GREEN}PostgreSQLの初期化が完了しました。${NC}"
 }
