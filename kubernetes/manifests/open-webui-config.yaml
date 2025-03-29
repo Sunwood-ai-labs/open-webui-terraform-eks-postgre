@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: open-webui-config
+  namespace: default
+data:
+  WEBUI_AUTH: "true"
+  WEBUI_DB_BACKEND: "postgres"
+  WEBUI_ALLOW_REGISTRATION: "true"
+  WEBUI_SERVE_FRONTEND: "true"
+  WEBUI_SERVE_API: "true"
+  WEBUI_CORS_PROXY_ENABLED: "true"
+  WEBUI_CORS_PROXY_URL: "http://localhost:8000"
+  WEBUI_ENABLE_HTTPS: "false"
+  WEBUI_HOST: "0.0.0.0"
+  WEBUI_PORT: "8080"

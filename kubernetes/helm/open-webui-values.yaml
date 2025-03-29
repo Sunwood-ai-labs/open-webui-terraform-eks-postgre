@@ -1,0 +1,120 @@
+# Open WebUI Helm Values
+# PostgreSQLをバックエンドとして使用するOpen WebUIの設定
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/open-webui/open-webui
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 8080
+
+# PostgreSQLを使用するため、永続ボリュームは無効化
+persistence:
+  enabled: false
+
+# 環境変数の設定
+extraEnvVars:
+  - name: DATABASE_URL
+    valueFrom:
+      secretKeyRef:
+        name: open-webui-postgres-secret
+        key: DATABASE_URL
+  - name: WEBUI_SECRET_KEY
+    valueFrom:
+      secretKeyRef:
+        name: open-webui-postgres-secret
+        key: WEBUI_SECRET_KEY
+  - name: WEBUI_AUTH
+    valueFrom:
+      configMapKeyRef:
+        name: open-webui-config
+        key: WEBUI_AUTH
+  - name: WEBUI_DB_BACKEND
+    valueFrom:
+      configMapKeyRef:
+        name: open-webui-config
+        key: WEBUI_DB_BACKEND
+  - name: WEBUI_ALLOW_REGISTRATION
+    valueFrom:
+      configMapKeyRef:
+        name: open-webui-config
+        key: WEBUI_ALLOW_REGISTRATION
+  - name: WEBUI_SERVE_FRONTEND
+    valueFrom:
+      configMapKeyRef:
+        name: open-webui-config
+        key: WEBUI_SERVE_FRONTEND
+  - name: WEBUI_SERVE_API
+    valueFrom:
+      configMapKeyRef:
+        name: open-webui-config
+        key: WEBUI_SERVE_API
+  - name: WEBUI_CORS_PROXY_ENABLED
+    valueFrom:
+      configMapKeyRef:
+        name: open-webui-config
+        key: WEBUI_CORS_PROXY_ENABLED
+  - name: WEBUI_CORS_PROXY_URL
+    valueFrom:
+      configMapKeyRef:
+        name: open-webui-config
+        key: WEBUI_CORS_PROXY_URL
+  - name: WEBUI_ENABLE_HTTPS
+    valueFrom:
+      configMapKeyRef:
+        name: open-webui-config
+        key: WEBUI_ENABLE_HTTPS
+  - name: WEBUI_HOST
+    valueFrom:
+      configMapKeyRef:
+        name: open-webui-config
+        key: WEBUI_HOST
+  - name: WEBUI_PORT
+    valueFrom:
+      configMapKeyRef:
+        name: open-webui-config
+        key: WEBUI_PORT
+
+# リソース制限の設定
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Ingressの設定（AWS ALBを使用）
+ingress:
+  enabled: false  # マニフェストで別途定義するため無効化
