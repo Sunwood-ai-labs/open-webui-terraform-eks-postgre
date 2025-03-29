@@ -30,12 +30,11 @@ terraform {
   }
 
   backend "s3" {
-    # 以下の値は環境に合わせて変更してください
-    # bucket         = "your-terraform-state-bucket"
-    # key            = "open-webui/terraform.tfstate"
-    # region         = "us-east-1"
-    # dynamodb_table = "terraform-state-lock"
-    # encrypt        = true
+    bucket         = "open-webui-tfstate"
+    key            = "terraform.tfstate"
+    region         = "ap-northeast-1"
+    dynamodb_table = "terraform-state-lock"
+    encrypt        = true
   }
 }
 
@@ -44,6 +43,33 @@ provider "aws" {
 
   default_tags {
     tags = var.default_tags
+  }
+}
+
+# Retrieve EKS cluster authentication information
+data "aws_eks_cluster" "cluster" {
+  name = module.eks.cluster_id
+  depends_on = [module.eks.cluster_id]
+}
+
+data "aws_eks_cluster_auth" "cluster" {
+  name = module.eks.cluster_id
+  depends_on = [module.eks.cluster_id]
+}
+
+# Kubernetes provider configuration
+provider "kubernetes" {
+  host                   = data.aws_eks_cluster.cluster.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)
+  token                  = data.aws_eks_cluster_auth.cluster.token
+}
+
+# Helm provider configuration
+provider "helm" {
+  kubernetes {
+    host                   = data.aws_eks_cluster.cluster.endpoint
+    cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)
+    token                  = data.aws_eks_cluster_auth.cluster.token
   }
 }
 
@@ -77,30 +103,6 @@ module "rds" {
   depends_on = [module.vpc]
 }
 
-# Kubernetes プロバイダー設定
-provider "kubernetes" {
-  host                   = module.eks.cluster_endpoint
-  cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    command     = "aws"
-    args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
-  }
-}
-
-# Helm プロバイダー設定
-provider "helm" {
-  kubernetes {
-    host                   = module.eks.cluster_endpoint
-    cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)
-    exec {
-      api_version = "client.authentication.k8s.io/v1beta1"
-      command     = "aws"
-      args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
-    }
-  }
-}
-
 # EKSモジュール
 module "eks" {
   source = "./modules/eks"
@@ -119,10 +121,4 @@ module "eks" {
   tags                 = var.default_tags
 
   depends_on = [module.vpc]
-}
-
-# EKSクラスター情報取得
-data "aws_eks_cluster" "cluster" {
-  name = module.eks.cluster_name
-  depends_on = [module.eks]
 }

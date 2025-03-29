@@ -17,7 +17,7 @@ resource "aws_db_subnet_group" "main" {
 
 resource "aws_db_parameter_group" "postgres" {
   name   = "${var.prefix}-postgres-params"
-  family = "postgres14"
+  family = "postgres17"
 
   parameter {
     name  = "log_connections"
@@ -63,15 +63,4 @@ resource "aws_db_instance" "postgres" {
       Name = "${var.prefix}-postgres"
     }
   )
-}
-
-# pgvector拡張機能の有効化
-resource "null_resource" "enable_pgvector" {
-  depends_on = [aws_db_instance.postgres]
-
-  provisioner "local-exec" {
-    command = <<-EOT
-      PGPASSWORD=${var.db_password} psql -h ${aws_db_instance.postgres.address} -U ${var.db_username} -d ${var.db_name} -c "CREATE EXTENSION IF NOT EXISTS pgvector;"
-    EOT
-  }
 }

@@ -43,3 +43,8 @@ output "db_connection_string" {
   value       = module.rds.db_connection_string
   sensitive   = true
 }
+
+output "region" {
+  description = "使用しているAWSリージョン"
+  value       = var.region
+}

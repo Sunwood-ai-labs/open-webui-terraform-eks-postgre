@@ -22,6 +22,17 @@ variable "availability_zones" {
   default     = ["us-east-1a", "us-east-1b", "us-east-1c"]
 }
 
+# Terraformバックエンド設定
+variable "terraform_backend" {
+  description = "Terraformのバックエンド設定"
+  type = object({
+    bucket         = string
+    key            = string
+    dynamodb_table = string
+  })
+  sensitive = true
+}
+
 variable "kubernetes_version" {
   description = "Kubernetesのバージョン"
   type        = string

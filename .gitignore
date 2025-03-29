@@ -35,3 +35,6 @@ Thumbs.db
 *.pem
 *.key
 *.env
+memo.md
+terraform/.terraform.lock.hcl
+
