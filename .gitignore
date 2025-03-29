@@ -3,7 +3,8 @@
 *.tfstate
 *.tfstate.*
 crash.log
-*.tfvars
+# tfvars exclusion
+!terraform/environments/dev/terraform.tfvars
 override.tf
 override.tf.json
 *_override.tf
