@@ -1,0 +1,35 @@
+region         = "ap-northeast-1"
+prefix         = "open-webui"
+vpc_cidr       = "10.0.0.0/16"
+availability_zones = ["ap-northeast-1a", "ap-northeast-1c"]
+
+# Terraformバックエンド設定
+terraform_backend = {
+  bucket         = "open-webui-tfstate"
+  key            = "terraform.tfstate"
+  dynamodb_table = "terraform-state-lock"
+}
+
+# RDS設定
+postgres_version     = "17.4"
+db_instance_class    = "db.t3.micro"
+allocated_storage    = 20
+max_allocated_storage = 100
+db_name              = "openwebuidb"
+db_username          = "openwebui"
+db_password          = "YourSecurePasswordHere123!" # 本番環境では必ず変更してください
+
+# EKS設定
+kubernetes_version   = "1.27"
+node_instance_types  = ["t3.medium"]
+node_disk_size       = 20
+node_desired_size    = 2
+node_min_size        = 1
+node_max_size        = 3
+
+# タグ設定
+default_tags = {
+  Environment = "dev"
+  Project     = "open-webui"
+  ManagedBy   = "terraform"
+}
